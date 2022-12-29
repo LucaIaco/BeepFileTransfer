@@ -63,7 +63,6 @@
                     <li>Once the meta info beep sequence is sent, it will perform another "separator" beep, which indicates that the actual file transmission in beeps, is about to start</li>
                     <li>The Receiver, who hopefully managed to receive and detect a valid json sequence of caracter, will parse it and receive file name, file type and file size. The file size will be used to determine the end of the file transmission on the Receiver side</li>
                     <li>The file data transmission (Byte after Byte till the end) will run by performing the beeps, until the end of the file. As you can imagine, this process is overall pretty long, and error prone, given the nature of the solution adopted (sounds) to transmit information from Sender to Receiver</li>
-                    <li>When the last chunk is received on the Receiver and then validated back on the Sender, then a last QR image is sent notifying the Receiver that the transmission is completed.</li>
                     <li>Once the Receiver gets the last expected Byte, it will wrap it up and download it on the disk</li>
                 </ul>
 				<b>Extra notes:</b> 
