@@ -21,7 +21,7 @@ This tool allows you to transmit files between two devices relying <b>EXCLUSIVEL
 </ul>
 <b>How does it work:</b> 
 <ul>
-	<li>The entire tool relies on the natively provided<a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API">Web Audio API</a></li>
+	<li>The entire tool relies on the natively provided <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API">Web Audio API</a></li>
 	<li>It generates beep sounds (Sender) and analyzes and determines the frequency of that sound (Receiver)</a></li>
 	<li>We define a sound frequency spectre and we quantize it to be able to represent all the values of a single hexadecimal number (0x0 -> 0xF)</li>
 	<li>Each quantum is a frequency range representing a single value in hexadecimal</li>
@@ -43,7 +43,6 @@ This tool allows you to transmit files between two devices relying <b>EXCLUSIVEL
 			<li>separatorFrequency</li>
 			<li>defaultOscillatorType</li>
 			<li>defaultBeepDuration</li>
-			<li>defaultBeepVolume</li>
 			<li>defaultBeepVolume</li>
 			<li>defaultUseSeparator</li>
 		</ul>
