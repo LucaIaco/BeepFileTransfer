@@ -188,6 +188,7 @@ BeepFileTransfer.Core = class {
      * Populates the input text fields in the home view with from the common parameters
      */
 	static _populateCommonInputsFromParams() {
+		
 		document.getElementById("commonMinFreqId").value = BeepFileTransfer.Utils.minFrequency;
 		document.getElementById("commonMaxFreqId").value = BeepFileTransfer.Utils.maxFrequency;
 		document.getElementById("commonSepFreqId").value = BeepFileTransfer.Utils.separatorFrequency;
@@ -204,11 +205,21 @@ BeepFileTransfer.Core = class {
      * Populates the common parameters from the input text fields in the home view
      */
 	static _populateCommonParamsFromInputs() {
-		BeepFileTransfer.Utils.minFrequency = isNaN(document.getElementById("commonMinFreqId").value) ? 440 : parseInt(document.getElementById("commonMinFreqId").value);
-		BeepFileTransfer.Utils.maxFrequency = isNaN(document.getElementById("commonMaxFreqId").value) ? 1760 : parseInt(document.getElementById("commonMaxFreqId").value);
-		BeepFileTransfer.Utils.separatorFrequency = isNaN(document.getElementById("commonSepFreqId").value) ? 1900 : parseInt(document.getElementById("commonSepFreqId").value);
-		BeepFileTransfer.Utils.defaultBeepDuration = isNaN(document.getElementById("commonBeepDurationId").value) ? 270 : parseInt(document.getElementById("commonBeepDurationId").value);
-		BeepFileTransfer.Utils.defaultBeepVolume = isNaN(document.getElementById("commonBeepVolumeId").value) ? 50 : parseInt(document.getElementById("commonBeepVolumeId").value);
+		
+		let oldMin = BeepFileTransfer.Utils.minFrequency;
+		let oldMax = BeepFileTransfer.Utils.maxFrequency;
+		
+		BeepFileTransfer.Utils.minFrequency = this._validatedInput("commonMinFreqId", 500);
+		BeepFileTransfer.Utils.maxFrequency = this._validatedInput("commonMaxFreqId", 4700);
+		BeepFileTransfer.Utils.separatorFrequency = this._validatedInput("commonSepFreqId", 5000);
+		BeepFileTransfer.Utils.defaultBeepDuration = this._validatedInput("commonBeepDurationId", 140);
+		BeepFileTransfer.Utils.defaultBeepVolume = this._validatedInput("commonBeepVolumeId", 50);
+	
+		// make sure the min and max are not too close
+		if ((BeepFileTransfer.Utils.maxFrequency - BeepFileTransfer.Utils.minFrequency) >= BeepFileTransfer.Utils.frequencyDeltaUnit()/2 ){
+			BeepFileTransfer.Utils.minFrequency = oldMin;
+			BeepFileTransfer.Utils.maxFrequency = oldMax;
+		}
 	
 		// validate the separator frequency (shall not fall in the valid frequency range). If so, just move it over the maxFrequency + delta unit to be safe
 		if (BeepFileTransfer.Utils._hexNumberFromFrequency(BeepFileTransfer.Utils.separatorFrequency) !== null) {
@@ -217,6 +228,15 @@ BeepFileTransfer.Core = class {
 		
 		let newType = document.getElementById("commonOscillatorTypeId").options[document.getElementById("commonOscillatorTypeId").selectedIndex].value;
 		BeepFileTransfer.Utils.defaultOscillatorType = newType;
+	}
+	
+	/**
+     * Return the validated number from the input at the given id. On parse failure, it returns the fallback value
+     */
+	static _validatedInput(id, fallback) {
+		let val = document.getElementById(id).value.trim();
+		if (val.length == 0) { return fallback }
+		return parseFloat(val) || fallback;
 	}
 	
 	/**
@@ -301,7 +321,7 @@ BeepFileTransfer.Core = class {
 		this._beepListener = new BeepFileTransfer.BeepListener();
 		this._fileWorker = BeepFileTransfer.FileWorker.createWriter();
 		let that = this;
-		let result = await this._beepListener.initialize((detectedFrequency, detectedHexNumber) => {
+		let result = await this._beepListener.initialize( async (detectedFrequency, detectedHexNumber) => {
 			if (detectedHexNumber === null) { return }
 			document.getElementById("lblDetectedFreq").innerHTML = "" + detectedFrequency.toFixed(2) + " Hz (0x" + detectedHexNumber.toString(16) + ")";
 			// collect the byte fragments for the meta info object if not yet entirely received, otherwise collect the actual file bytes
@@ -310,7 +330,7 @@ BeepFileTransfer.Core = class {
 			} else {
 				that._updateMetaInformation();
 				that._updateProgresses();
-				that._fileWorker.writerCommitPendingByte(detectedHexNumber);
+				await that._fileWorker.writerCommitPendingByte(detectedHexNumber);
 			}
 			// check if the data transmission is completed. In case, stop the receiver
 			if (that._fileWorker.progress() == 1.0) {
@@ -324,7 +344,7 @@ BeepFileTransfer.Core = class {
 		} else {
 			document.getElementById(BeepFileTransfer.Core._displayedView.lblFileId).innerHTML = "&lt; acquiring metadata &gt;";
 			this._showWaveForm(true);
-			this._beepListener.start();
+			await this._beepListener.start();
 		}
     }
 	
@@ -564,18 +584,18 @@ BeepFileTransfer.Utils = class {
 	/**
 	 * The supported lower frequency bound
 	 */
-	static minFrequency = 440;
+	static minFrequency = 500;
 
 	/**
 	 * The supported upper frequency bound
 	 */
-	static maxFrequency = 1760;
+	static maxFrequency = 4700;
 
 	/**
 	 * The supported separator frequency, used to distinguish two cosecutive beeps. 
 	 * It SHALL NOT fall in the range between (minFrequency - frequencyDeltaUnit / 2) and minFrequency + frequencyDeltaUnit / 2
 	 */
-	static separatorFrequency = 1900;
+	static separatorFrequency = 5000;
 
 	/**
 	 * The frequency delta unit ( distance between two key frequencies in the spectrum between minFrequency and maxFrequency )
@@ -590,7 +610,7 @@ BeepFileTransfer.Utils = class {
 	/**
 	 * The default used duration for each generated beep sound (in millisecs)
 	 */
-	static defaultBeepDuration = 270;
+	static defaultBeepDuration = 140;
 	
 	/**
 	 * The default used volume gain for each generated beep sound
@@ -1175,9 +1195,9 @@ BeepFileTransfer.BeepListener = class {
      * Start detecting frequencies
      * @public
      */
-	start() {
+	async start() {
 		this._isRunning = true;
-		this._run();
+		await this._run();
 	}
 	
 	/**
@@ -1192,7 +1212,7 @@ BeepFileTransfer.BeepListener = class {
      * This method analyzes the sound and extract the frequency 
      * @private
      */
-	_run() {
+	async _run() {
 		if (this._isRunning == false ) { return }
 		
 		let data = new Uint8Array(this.analyzer.frequencyBinCount);
@@ -1211,8 +1231,15 @@ BeepFileTransfer.BeepListener = class {
 			if (this._onFrequencyDetected !== null) { this._onFrequencyDetected(this._lastDetectedFrequency, newHexNumber); }
 		}
 
+		// it attempts to read analyze the sound wave at every 5 ms
 		let that = this;
-		requestAnimationFrame(function() { that._run(); });
+		await this._delay(5).then(() => that._run());
 	}
+	
+	/**
+     * Returns a new promise which resolved in the given time in milliseconds
+     * @private
+     */
+	_delay(ms) { return new Promise(resolve => setTimeout(resolve, ms));}
 
 }
