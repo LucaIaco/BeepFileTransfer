@@ -122,25 +122,30 @@ BeepFileTransfer.Core = class {
         // keep track of the displaying view except of help view
         if (view != BeepFileTransfer.Core.ViewOption.help){
             this._displayedView = view
-        }
+        } else {
+			this._populateDynamicHelpViewPart();
+		}
 
         // If the view is not already shown, do any necessary custom action
         if (this._displayedView !== null && this._displayedView != previousView) {
             switch (view){
                 case BeepFileTransfer.Core.ViewOption.home: {
-                    switch (previousView) {
+					switch (previousView) {
                         case BeepFileTransfer.Core.ViewOption.sendFile: { this.stopSending(); break; }
                         case BeepFileTransfer.Core.ViewOption.receiveFile: { this.stopReceiving(); break; }
                         default: { break; }
                     }
+					this._populateCommonInputsFromParams();
                     break;
                 }
                 case BeepFileTransfer.Core.ViewOption.sendFile: {
+					this._populateCommonParamsFromInputs();
                     this._setupSender();
                     break;
                 }
                 case BeepFileTransfer.Core.ViewOption.receiveFile: {
-                    this._setupReceiver();
+                    this._populateCommonParamsFromInputs();
+					this._setupReceiver();
                     break;
                 }
                 default: { break; }
@@ -153,6 +158,61 @@ BeepFileTransfer.Core = class {
      * Displays the previously tracked view
      */
     static closeHelp() { if (this._displayedView !== null) { this.loadView(this._displayedView); } }
+	
+	/**
+     * Show / Hide the common parameters in the home screen
+     */
+	static toggleSharedParams() {
+		let isChecked = document.getElementById("checkShowParamsId").checked;
+		document.getElementById("commonParamId").style.display = isChecked ? null : "none";
+	}
+	
+	/**
+     * Populate the help section for the hex -> frequency map sublist
+     */
+	static _populateDynamicHelpViewPart() {
+		this._populateCommonParamsFromInputs();
+		document.getElementById("helpDeltaFreqId").innerHTML = BeepFileTransfer.Utils.frequencyDeltaUnit().toFixed(2);
+		// populate the help section for the hex -> frequency map sublist
+		let helpHexFreqList = document.getElementById("helpHexFreqMapId");
+		helpHexFreqList.innerHTML = "";
+		for (let i=0; i<=0xF;i++) { 
+			let keyFreq = BeepFileTransfer.Utils.minFrequency + i * BeepFileTransfer.Utils.frequencyDeltaUnit();
+			let li = document.createElement("li");
+			li.innerText = "0x"+ i.toString(16).toUpperCase() + " ⇔ " + keyFreq.toFixed(2) + " Hz ( " + (keyFreq - (BeepFileTransfer.Utils.frequencyDeltaUnit() / 2) + 1).toFixed(2) + " Hz , " + (keyFreq + BeepFileTransfer.Utils.frequencyDeltaUnit() / 2).toFixed(2) + " Hz)";
+			helpHexFreqList.appendChild(li);
+		}
+	}
+	
+	/**
+     * Populates the input text fields in the home view with from the common parameters
+     */
+	static _populateCommonInputsFromParams() {
+		document.getElementById("commonMinFreqId").value = BeepFileTransfer.Utils.minFrequency;
+		document.getElementById("commonMaxFreqId").value = BeepFileTransfer.Utils.maxFrequency;
+		document.getElementById("commonSepFreqId").value = BeepFileTransfer.Utils.separatorFrequency;
+		document.getElementById("commonBeepDurationId").value = BeepFileTransfer.Utils.defaultBeepDuration;
+		document.getElementById("commonBeepVolumeId").value = BeepFileTransfer.Utils.defaultBeepVolume;
+		
+		let ixType = 0;
+		let options = document.getElementById("commonOscillatorTypeId").options;
+		for (let i=0; i<options.length; i++) { if (options[i].value == BeepFileTransfer.Utils.defaultOscillatorType) { ixType = i; break; } }
+		document.getElementById("commonOscillatorTypeId").selectedIndex = ixType;
+	}
+	
+	/**
+     * Populates the common parameters from the input text fields in the home view
+     */
+	static _populateCommonParamsFromInputs() {
+		BeepFileTransfer.Utils.minFrequency = isNaN(document.getElementById("commonMinFreqId").value) ? 440 : parseInt(document.getElementById("commonMinFreqId").value);
+		BeepFileTransfer.Utils.maxFrequency = isNaN(document.getElementById("commonMaxFreqId").value) ? 1760 : parseInt(document.getElementById("commonMaxFreqId").value);
+		BeepFileTransfer.Utils.separatorFrequency = isNaN(document.getElementById("commonSepFreqId").value) ? 1900 : parseInt(document.getElementById("commonSepFreqId").value);
+		BeepFileTransfer.Utils.defaultBeepDuration = isNaN(document.getElementById("commonBeepDurationId").value) ? 270 : parseInt(document.getElementById("commonBeepDurationId").value);
+		BeepFileTransfer.Utils.defaultBeepVolume = isNaN(document.getElementById("commonBeepVolumeId").value) ? 50 : parseInt(document.getElementById("commonBeepVolumeId").value);
+	
+		let newType = document.getElementById("commonOscillatorTypeId").options[document.getElementById("commonOscillatorTypeId").selectedIndex].value;
+		BeepFileTransfer.Utils.defaultOscillatorType = newType;
+	}
 	
 	/**
      * Indicates if the current selected view is the Sender or the Receiver view
@@ -515,7 +575,7 @@ BeepFileTransfer.Utils = class {
 	/**
 	 * The frequency delta unit ( distance between two key frequencies in the spectrum between minFrequency and maxFrequency )
 	 */
-	static frequencyDeltaUnit = (this.maxFrequency - this.minFrequency) / 0xF;
+	static frequencyDeltaUnit() { return (this.maxFrequency - this.minFrequency) / 0xF }
 
 	/**
 	 * The default wave form type to be used by the oscillator (eg. sine, square, triangle)
@@ -643,7 +703,7 @@ BeepFileTransfer.Utils = class {
 	 */
 	static _hexNumberFromFrequency(frequency) {
 		let deltaFrequency = frequency - this.minFrequency;
-		let number = deltaFrequency / this.frequencyDeltaUnit;
+		let number = deltaFrequency / this.frequencyDeltaUnit();
 		
 		let result = Math.round(number);
 		// the approx should not be symmetric, but will have 1 Hz less, to not overlap the adiacent frequency range
@@ -664,7 +724,7 @@ BeepFileTransfer.Utils = class {
 	 * @returns {number} - The resulting frequency in Hertz
 	 */
 	static _frequencyFromHexNumber(hexValue) {
-		let deltaFrequency = hexValue * this.frequencyDeltaUnit;
+		let deltaFrequency = hexValue * this.frequencyDeltaUnit();
 		let freq = this.minFrequency + deltaFrequency;
 		return freq;
 	}
