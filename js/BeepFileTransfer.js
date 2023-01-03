@@ -215,8 +215,8 @@ BeepFileTransfer.Core = class {
 		BeepFileTransfer.Utils.defaultBeepDuration = this._validatedInput("commonBeepDurationId", 140);
 		BeepFileTransfer.Utils.defaultBeepVolume = this._validatedInput("commonBeepVolumeId", 50);
 	
-		// make sure the min and max are not too close
-		if ((BeepFileTransfer.Utils.maxFrequency - BeepFileTransfer.Utils.minFrequency) >= BeepFileTransfer.Utils.frequencyDeltaUnit()/2 ){
+		// make sure the min is lower than max
+		if (BeepFileTransfer.Utils.minFrequency >= BeepFileTransfer.Utils.maxFrequency) {
 			BeepFileTransfer.Utils.minFrequency = oldMin;
 			BeepFileTransfer.Utils.maxFrequency = oldMax;
 		}
