@@ -445,7 +445,7 @@ BeepFileTransfer.Core = class {
 		let hexNumbers = BeepFileTransfer.Utils._leftRightHexFromByteNumber(byteNumber);
 		let freq1 = BeepFileTransfer.Utils._frequencyFromHexNumber(hexNumbers[0]);
 		let freq2 = BeepFileTransfer.Utils._frequencyFromHexNumber(hexNumbers[1]);
-		document.getElementById("lblPlayingFreq").innerHTML = "Freq 1: " + freq1 + " Hz (0x" + hexNumbers[0].toString(16) + ") | Freq 2: " + freq2 + " Hz (0x" + hexNumbers[1].toString(16) + ")";
+		document.getElementById("lblPlayingFreq").innerHTML = "Freq 1: " + freq1.toFixed(2) + " Hz (0x" + hexNumbers[0].toString(16) + ") | Freq 2: " + freq2.toFixed(2) + " Hz (0x" + hexNumbers[1].toString(16) + ")";
 	}
 	
 	/**
