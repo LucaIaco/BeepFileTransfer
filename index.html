@@ -16,6 +16,29 @@
 				<button class="buttonStyle" style="margin: 5px auto; width: 130px;" onclick="BeepFileTransfer.Core.loadView(BeepFileTransfer.Core.ViewOption.help)">Show Help</button>
 				<button class="buttonStyle" style="margin: 5px auto; width: 130px;" onclick="BeepFileTransfer.Core.loadView(BeepFileTransfer.Core.ViewOption.sendFile)">Send file</button>
 				<button class="buttonStyle" style="margin: 5px auto; width: 130px;" onclick="BeepFileTransfer.Core.loadView(BeepFileTransfer.Core.ViewOption.receiveFile)">Receive file</button>
+				<div>
+					<input type="checkbox" id="checkShowParamsId" onclick="BeepFileTransfer.Core.toggleSharedParams()"/><label for="checkShowParamsId">Common parameters</label>
+					<div id="commonParamId" style="display:none">
+						<hr>
+						<label for="commonMinFreqId">Min frequency</label>
+						<input type="text" id="commonMinFreqId"></br>
+						<label for="commonMaxFreqId">Max frequency</label>
+						<input type="text" id="commonMaxFreqId"></br>
+						<label for="commonSepFreqId">Separator frequency</label>
+						<input type="text" id="commonSepFreqId"></br>
+						<label for="commonBeepDurationId">Beep duration (ms)</label>
+						<input type="text" id="commonBeepDurationId"></br>
+						<label for="commonBeepVolumeId">Beep volume (gain)</label>
+						<input type="text" id="commonBeepVolumeId"></br>
+						<label for="commonOscillatorTypeId">Oscillator wave type</label>
+						<select id="commonOscillatorTypeId">
+							<option value="sine">Sine</option>
+							<option value="square">Square</option>
+							<option value="triangle">Triangle</option>
+							<option value="sawtooth">Sawtooth</option>
+						</select>
+					</div>
+				</div>
 			</div>
 			<div>
 				<div style="display: block;float: left;"><b >Author:</br></b>LucaIaco</a></div>
@@ -56,7 +79,7 @@
 					<li>It generates beep sounds (Sender) and analyzes and determines the frequency of that sound (Receiver)</a></li>
 					<li>We define a sound frequency spectre and we quantize it to be able to represent all the values of a single hexadecimal number (0x0 -> 0xF)</li>
 					<li>Each quantum is a frequency range representing a single value in hexadecimal</li>
-					<li>The list below represent the mapping of the hex value and the representing frequency range: <ul id="helpHexFreqMapId"></ul></li>
+					<li>The list below represent the mapping of the hex value and the correpsonding frequency range (delta range unit: <span id="helpDeltaFreqId"></span> Hz): <ul id="helpHexFreqMapId"></ul></li>
                     <li>Each Byte (0x00 -> 0xFF) in the file stream, is locally split in two parts. This allows us to represent the each part with a dedicated beep. Therefore, each Byte is "logically" represented by two beeps. In order to help the Receiver audio analysis, we place a "separator" beep between the two part and one after the second part. As final result, each Byte is actually represented by 4 beeps</li>
 					<li>The Sender start with a "separator" beep to awake/normalize the Receiver microphone, and also to inform you that the transmission is about to start.</li>
                     <li>After the initial beep it will start sending the sequence of beeps to build up the meta info object (as json string). Those meta info are file name, file size, file type</li>
@@ -67,17 +90,7 @@
                 </ul>
 				<b>Extra notes:</b> 
                 <ul>
-                    <li>The configuration adopted at the moment is the one that fit my tests, with the lowest error rate. Fell free to play around by changing the parameters in the class "BeepFileTransfer.Utils", such as:
-						<ul>
-							<li>minFrequency</li>
-							<li>maxFrequency</li>
-							<li>separatorFrequency</li>
-							<li>defaultOscillatorType</li>
-							<li>defaultBeepDuration</li>
-							<li>defaultBeepVolume</li>
-							<li>defaultUseSeparator</li>
-						</ul>
-					</li>
+                    <li>The configuration adopted at the moment is the one that fit my tests, with the lowest error rate. Fell free to play around by changing the common parameters, check the "Common parameters" checkbox in the main screen.</br><b>IMPORTANT: If you change any of the params, make sure they match on both Sender and Receiver devices!</b></li>
 					<li>If you use an iPhone as Sender device, make sure that the phone is not in Silent mode in order to successfully perform the beeps sounds</li>
                 </ul>
                 <b>Dependencies:</b> 
@@ -174,15 +187,6 @@
             window.onload = function () {
 				// Start showing the home view
                 BeepFileTransfer.Core.loadView(BeepFileTransfer.Core.ViewOption.home);
-				
-				// populate the help section for the hex -> frequency map sublist
-				let helpHexFreqList = document.getElementById("helpHexFreqMapId");
-				for (let i=0; i<=0xF;i++) { 
-					let keyFreq = BeepFileTransfer.Utils.minFrequency + i * BeepFileTransfer.Utils.frequencyDeltaUnit;
-					let li = document.createElement("li");
-					li.innerText = "0x"+ i.toString(16).toUpperCase() + " ⇔ " + keyFreq.toString() + " Hz ( " + (keyFreq - (BeepFileTransfer.Utils.frequencyDeltaUnit / 2) + 1).toString() + " Hz , " + (keyFreq + BeepFileTransfer.Utils.frequencyDeltaUnit / 2).toString() + " Hz)";
-					helpHexFreqList.appendChild(li);
-				}
             }
         </script>
 
