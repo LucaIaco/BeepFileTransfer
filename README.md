@@ -36,17 +36,7 @@ This tool allows you to transmit files between two devices relying <b>EXCLUSIVEL
 </ul>
 <b>Extra notes:</b> 
 <ul>
-	<li>The configuration adopted at the moment is the one that fit my tests, with the lowest error rate. Fell free to play around by changing the parameters in the class "BeepFileTransfer.Utils", such as:
-		<ul>
-			<li>minFrequency</li>
-			<li>maxFrequency</li>
-			<li>separatorFrequency</li>
-			<li>defaultOscillatorType</li>
-			<li>defaultBeepDuration</li>
-			<li>defaultBeepVolume</li>
-			<li>defaultUseSeparator</li>
-		</ul>
-	</li>
+	<li>The configuration adopted at the moment is the one that fit my tests, with the lowest error rate. Fell free to play around by changing the common parameters, check the "Common parameters" checkbox in the main screen.</br><b>IMPORTANT: If you change any of the params, make sure they match on both Sender and Receiver devices!</b></li>
 	<li>If you use an iPhone as Sender device, make sure that the phone is not in Silent mode in order to successfully perform the beeps sounds</li>
 </ul>
 <b>Dependencies:</b> 
