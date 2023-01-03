@@ -210,6 +210,11 @@ BeepFileTransfer.Core = class {
 		BeepFileTransfer.Utils.defaultBeepDuration = isNaN(document.getElementById("commonBeepDurationId").value) ? 270 : parseInt(document.getElementById("commonBeepDurationId").value);
 		BeepFileTransfer.Utils.defaultBeepVolume = isNaN(document.getElementById("commonBeepVolumeId").value) ? 50 : parseInt(document.getElementById("commonBeepVolumeId").value);
 	
+		// validate the separator frequency (shall not fall in the valid frequency range). If so, just move it over the maxFrequency + delta unit to be safe
+		if (BeepFileTransfer.Utils._hexNumberFromFrequency(BeepFileTransfer.Utils.separatorFrequency) !== null) {
+			BeepFileTransfer.Utils.separatorFrequency = BeepFileTransfer.Utils.maxFrequency + BeepFileTransfer.Utils.frequencyDeltaUnit();
+		}
+		
 		let newType = document.getElementById("commonOscillatorTypeId").options[document.getElementById("commonOscillatorTypeId").selectedIndex].value;
 		BeepFileTransfer.Utils.defaultOscillatorType = newType;
 	}
